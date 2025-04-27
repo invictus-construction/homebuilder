@@ -3,17 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invictus Construction Sarnia - Simple Home Builder</title>
+<title>Invictus Construction Sarnia - Simple Framing Tool</title>
 <style>
-/* Same styles as before */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+@media (min-width: 768px) {
+    .container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+}
+.input-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+input, select, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+.results {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+.total-cost {
+    font-weight: bold;
+    margin-top: 10px;
+}
 </style>
 </head>
 <body>
-<h1>Invictus Construction Sarnia - Simple Home Builder</h1>
+<h1>Invictus Construction Sarnia - Simple Framing Tool</h1>
 <div class="container">
     <div class="card">
         <h2>Building Dimensions</h2>
-        <!-- Inputs (same as before) -->
+        <!-- Existing Inputs -->
+        <div class="input-group">
+            <label for="length">Length (ft):</label>
+            <input type="number" id="length" value="20">
+        </div>
+        <div class="input-group">
+            <label for="width">Width (ft):</label>
+            <input type="number" id="width" value="16">
+        </div>
+        <div class="input-group">
+            <label for="height">Wall Height (ft):</label>
+            <input type="number" id="height" value="8">
+        </div>
+        <div class="input-group">
+            <label for="studSpacing">Stud Spacing (inches):</label>
+            <input type="number" id="studSpacing" value="16">
+        </div>
+        <div class="input-group">
+            <label for="roofPitch">Roof Pitch (X:12):</label>
+            <input type="number" id="roofPitch" value="6">
+        </div>
+        <div class="input-group">
+            <label for="lumberSize">Lumber Size:</label>
+            <select id="lumberSize">
+                <option value="2x4">2x4</option>
+                <option value="2x6">2x6</option>
+                <option value="2x10">2x10</option>
+                <option value="LVL9.25">LVL 1-3/4 x 9-1/4</option>
+                <option value="LVL11.875">LVL 1-3/4 x 11-7/8</option>
+            </select>
+        </div>
         <div class="input-group">
             <label for="eaveOverhang">Eave Overhang (inches):</label>
             <input type="number" id="eaveOverhang" value="12">
@@ -22,7 +103,42 @@
             <label for="gableOverhang">Gable Overhang (inches):</label>
             <input type="number" id="gableOverhang" value="12">
         </div>
-        <!-- Door/Window Openings (same as before) -->
+
+        <h2>Framing Details</h2>
+        <div class="input-group">
+            <label for="kingStudsPerOpening">King Studs Per Opening:</label>
+            <input type="number" id="kingStudsPerOpening" value="2">
+        </div>
+        <div class="input-group">
+            <label for="jackStudsPerOpening">Jack Studs Per Opening:</label>
+            <input type="number" id="jackStudsPerOpening" value="2">
+        </div>
+        <div class="input-group">
+            <label for="blockingOption">Add Blocking/Strapping:</label>
+            <select id="blockingOption">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+
+        <h2>Openings</h2>
+        <div class="input-group">
+            <label for="openingType">Type:</label>
+            <select id="openingType">
+                <option value="Door">Door</option>
+                <option value="Window">Window</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="openingWidth">Width (inches):</label>
+            <input type="number" id="openingWidth" value="36">
+        </div>
+        <div class="input-group">
+            <label for="openingLocation">Location on Wall (ft):</label>
+            <input type="number" id="openingLocation" value="5">
+        </div>
+        <button onclick="addOpening()">Add Opening</button>
+        <ul id="openingsList"></ul>
     </div>
 
     <div class="card">
@@ -31,88 +147,26 @@
             <li>Wall Studs: <span id="studCount">0</span></li>
             <li>Plates: <span id="plateCount">0</span></li>
             <li>Rafters: <span id="rafterCount">0</span></li>
+            <li>Ridge Beam: <span id="ridgeBeam">0</span></li>
+            <li>Fly Rafters: <span id="flyRafters">0</span></li>
+            <li>Blocking Pieces: <span id="blockingCount">0</span></li>
             <li>King Studs: <span id="kingStuds">0</span></li>
             <li>Jack Studs: <span id="jackStuds">0</span></li>
             <li>Headers: <span id="headerCount">0</span></li>
+            <li>Hurricane Ties: <span id="hurricaneTies">0</span></li>
+            <li>Rafter Hangers: <span id="rafterHangers">0</span></li>
+            <li>Collar Ties: <span id="collarTies">0</span></li>
+            <li>Joist Hangers: <span id="joistHangers">0</span></li>
             <li>Birdsmouth Angle: <span id="birdsmouthAngle">0</span>°</li>
-            <li>Rafter Length: <span id="fullRafterLength">0</span> ft</li>
+            <li>Full Rafter Length: <span id="fullRafterLength">0</span> ft</li>
             <li class="total-cost">Estimated Cost: $<span id="totalCost">0.00</span></li>
         </ul>
     </div>
 </div>
 
 <script>
-let openings = [];
-function addOpening() {
-    const type = document.getElementById('openingType').value;
-    const width = parseFloat(document.getElementById('openingWidth').value);
-    const location = parseFloat(document.getElementById('openingLocation').value);
-    if (width && location >= 0) {
-        openings.push({ type, width, location });
-        renderOpenings();
-        calculateMaterials();
-    }
-}
-function renderOpenings() {
-    const list = document.getElementById('openingsList');
-    list.innerHTML = '';
-    openings.forEach((opening, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${opening.type} - ${opening.width}" wide at ${opening.location} ft`;
-        list.appendChild(li);
-    });
-}
-function calculateMaterials() {
-    const length = parseFloat(document.getElementById('length').value) || 0;
-    const width = parseFloat(document.getElementById('width').value) || 0;
-    const studSpacing = parseFloat(document.getElementById('studSpacing').value) || 16;
-    const roofPitch = parseFloat(document.getElementById('roofPitch').value) || 6;
-    const lumberSize = document.getElementById('lumberSize').value;
-    const eaveOverhang = parseFloat(document.getElementById('eaveOverhang').value) || 12;
-    const gableOverhang = parseFloat(document.getElementById('gableOverhang').value) || 12;
-
-    const wallLength = 2 * (length + width);
-    let studsPerWall = Math.ceil((12 * wallLength) / studSpacing);
-    const cornerStuds = 4;
-    const kingStuds = openings.length * 2;
-    const jackStuds = openings.length * 2;
-    const headerCount = openings.length;
-    const totalStuds = studsPerWall + cornerStuds + kingStuds + jackStuds;
-    const platesNeeded = Math.ceil(2 * wallLength / 8);
-
-    const run = width / 2;
-    const rise = (roofPitch / 12) * run;
-    const rafterLength = Math.sqrt(rise * rise + run * run);
-    const overhangFeet = Math.max(eaveOverhang, gableOverhang) / 12;
-    const fullRafterLength = (Math.sqrt((rise * rise) + (run + overhangFeet) * (run + overhangFeet))).toFixed(2);
-    const raftersNeeded = Math.ceil((12 * length) / studSpacing) * 2;
-    const birdsmouthAngle = Math.atan(rise / run) * (180 / Math.PI);
-
-    let studPrice = 5;
-    switch(lumberSize) {
-        case '2x6': studPrice = 7; break;
-        case '2x10': studPrice = 12; break;
-        case 'LVL9.25': studPrice = 20; break;
-        case 'LVL11.875': studPrice = 24; break;
-    }
-
-    const totalCost = (totalStuds + platesNeeded + raftersNeeded + headerCount) * studPrice;
-
-    document.getElementById('studCount').textContent = totalStuds;
-    document.getElementById('plateCount').textContent = platesNeeded;
-    document.getElementById('rafterCount').textContent = raftersNeeded;
-    document.getElementById('kingStuds').textContent = kingStuds;
-    document.getElementById('jackStuds').textContent = jackStuds;
-    document.getElementById('headerCount').textContent = headerCount;
-    document.getElementById('birdsmouthAngle').textContent = birdsmouthAngle.toFixed(2);
-    document.getElementById('fullRafterLength').textContent = fullRafterLength;
-    document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-}
-const inputs = document.querySelectorAll('input, select');
-inputs.forEach(input => {
-    input.addEventListener('input', calculateMaterials);
-});
-calculateMaterials();
+// JavaScript Code Coming Here!
 </script>
+
 </body>
 </html>
