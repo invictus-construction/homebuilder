@@ -61,6 +61,18 @@
             border: 1px solid #ccc;
             margin-top: 20px;
         }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -89,13 +101,32 @@
                 <input type="number" id="roofPitch" value="6">
             </div>
             <div class="input-group">
-                <label for="lumberSize">Lumber Size:</label>
+                <label for="lumberSize">Lumber Size for Studs:</label>
                 <select id="lumberSize">
                     <option value="2x4">2x4</option>
                     <option value="2x6">2x6</option>
+                    <option value="2x8">2x8</option>
                     <option value="2x10">2x10</option>
-                    <option value="LVL9.25">LVL 1-3/4 x 9-1/4</option>
-                    <option value="LVL11.875">LVL 1-3/4 x 11-7/8</option>
+                    <option value="2x12">2x12</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="rafterLumberSize">Lumber Size for Rafters:</label>
+                <select id="rafterLumberSize">
+                    <option value="2x4">2x4</option>
+                    <option value="2x6">2x6</option>
+                    <option value="2x8">2x8</option>
+                    <option value="2x10">2x10</option>
+                    <option value="2x12">2x12</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="ridgeBeamLumberSize">Lumber Size for Ridge Beam:</label>
+                <select id="ridgeBeamLumberSize">
+                    <option value="2x6">2x6</option>
+                    <option value="2x8">2x8</option>
+                    <option value="2x10">2x10</option>
+                    <option value="2x12">2x12</option>
                 </select>
             </div>
             <div class="input-group">
@@ -141,34 +172,60 @@
                 <input type="text" id="openingLocation" value="5-0">
             </div>
             <button onclick="addOpening()">Add Opening</button>
+            <button onclick="removeOpening()">Remove Opening</button>
             <ul id="openingsList"></ul>
+
+            <button onclick="resetTool()">Start Over</button>
         </div>
 
         <div class="card">
             <h2>Materials Needed</h2>
-            <ul class="results">
-                <li>Wall Studs: <span id="studCount">0</span></li>
-                <li>Plates: <span id="plateCount">0</span></li>
-                <li>Rafters: <span id="rafterCount">0</span></li>
-                <li>Ridge Beam: <span id="ridgeBeam">0</span></li>
-                <li>Fly Rafters: <span id="flyRafters">0</span></li>
-                <li>Blocking Pieces: <span id="blockingCount">0</span></li>
-                <li>King Studs: <span id="kingStuds">0</span></li>
-                <li>Jack Studs: <span id="jackStuds">0</span></li>
-                <li>Headers: <span id="headerCount">0</span></li>
-                <li>Hurricane Ties: <span id="hurricaneTies">0</span></li>
-                <li>Rafter Hangers: <span id="rafterHangers">0</span></li>
-                <li>Collar Ties: <span id="collarTies">0</span></li>
-                <li>Joist Hangers: <span id="joistHangers">0</span></li>
-                <li>Birdsmouth Angle: <span id="birdsmouthAngle">0</span>°</li>
-                <li>Full Rafter Length: <span id="fullRafterLength">0</span> ft-in</li>
-                <li class="total-cost">Estimated Cost: $<span id="totalCost">0.00</span></li>
-            </ul>
+            <canvas id="framingCanvas" width="600" height="400"></canvas>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Qty</th>
+                        <th>Cost Each</th>
+                        <th>Total Cost</th>
+                    </tr>
+                </thead>
+                <tbody id="costTable">
+                    <tr>
+                        <td>2x4 Studs</td>
+                        <td id="studQty">0</td>
+                        <td>$4.00</td>
+                        <td id="studCost">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>2x6 Studs</td>
+                        <td id="stud2x6Qty">0</td>
+                        <td>$8.00</td>
+                        <td id="stud2x6Cost">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>2x8 Studs</td>
+                        <td id="stud2x8Qty">0</td>
+                        <td>$18.00</td>
+                        <td id="stud2x8Cost">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>2x10 Studs</td>
+                        <td id="stud2x10Qty">0</td>
+                        <td>$22.00</td>
+                        <td id="stud2x10Cost">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>2x12 Studs</td>
+                        <td id="stud2x12Qty">0</td>
+                        <td>$69.00</td>
+                        <td id="stud2x12Cost">$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="total-cost">Total Estimated Cost: $<span id="totalCost">0.00</span></p>
         </div>
     </div>
-
-    <!-- 2D Sketch Canvas -->
-    <canvas id="framingCanvas" width="600" height="400"></canvas>
 
     <script>
         let openings = [];
@@ -192,6 +249,13 @@
             }
         }
 
+        function removeOpening() {
+            openings.pop(); // Removes last opening
+            renderOpenings();
+            calculateMaterials();
+            drawCanvas();
+        }
+
         function renderOpenings() {
             const list = document.getElementById('openingsList');
             list.innerHTML = '';
@@ -207,8 +271,9 @@
             const width = parseFtInch(document.getElementById('width').value) || 0;
             const height = parseFtInch(document.getElementById('height').value) || 0;
             const studSpacing = parseFloat(document.getElementById('studSpacing').value) || 16;
-            const roofPitch = parseFloat(document.getElementById('roofPitch').value) || 6;
             const lumberSize = document.getElementById('lumberSize').value;
+            const rafterLumberSize = document.getElementById('rafterLumberSize').value;
+            const ridgeBeamLumberSize = document.getElementById('ridgeBeamLumberSize').value;
             const eaveOverhang = parseFloat(document.getElementById('eaveOverhang').value) || 12;
             const gableOverhang = parseFloat(document.getElementById('gableOverhang').value) || 12;
             const kingStudsPerOpening = parseInt(document.getElementById('kingStudsPerOpening').value) || 2;
@@ -231,60 +296,26 @@
             const totalStuds = studsPerimeter + cornerStuds + totalKingStuds + totalJackStuds + blockingPieces;
             const platesNeeded = Math.ceil((2 * wallPerimeter) / 8);
 
-            // Roof Calculations
-            const run = width / 2;
-            const rise = (roofPitch / 12) * run;
-            const baseRafterLength = Math.sqrt(run * run + rise * rise);
+            // Lumber Price per Unit Length
+            let lumberPrices = {
+                '2x4': 4,
+                '2x6': 8,
+                '2x8': 18,
+                '2x10': 22,
+                '2x12': 69
+            };
 
-            const overhangFeet = Math.max(eaveOverhang, gableOverhang) / 12;
-            const fullRafterLength = Math.sqrt((run + overhangFeet) ** 2 + rise ** 2);
-            const rafterCount = Math.ceil((length * 12) / studSpacing) * 2;
+            let studCost = totalStuds * lumberPrices[lumberSize];
+            let rafterCost = totalStuds * lumberPrices[rafterLumberSize];
+            let ridgeBeamCost = totalStuds * lumberPrices[ridgeBeamLumberSize];
 
-            const ridgeBeam = Math.ceil(length / 8);
-            const flyRafters = 4; // 2 per gable end (both sides).
-
-            const collarTies = Math.ceil(rafterCount / 2); // One collar tie every other rafter pair.
-            const hurricaneTies = rafterCount;
-            const rafterHangers = rafterCount;
-            const joistHangers = Math.ceil((width * 12) / studSpacing) * 2;
-
-            const birdsmouthAngle = Math.atan(rise / run) * (180 / Math.PI);
-
-            // Costs
-            let studPrice = 5;
-            switch (lumberSize) {
-                case '2x6': studPrice = 7; break;
-                case '2x10': studPrice = 12; break;
-                case 'LVL9.25': studPrice = 20; break;
-                case 'LVL11.875': studPrice = 24; break;
-            }
-            const totalCost = studPrice * (totalStuds + platesNeeded + rafterCount + ridgeBeam + flyRafters + blockingPieces);
-
-            // Update DOM
-            document.getElementById('studCount').textContent = totalStuds;
-            document.getElementById('plateCount').textContent = platesNeeded;
-            document.getElementById('rafterCount').textContent = rafterCount;
-            document.getElementById('ridgeBeam').textContent = ridgeBeam;
-            document.getElementById('flyRafters').textContent = flyRafters;
-            document.getElementById('blockingCount').textContent = blockingPieces;
-            document.getElementById('kingStuds').textContent = totalKingStuds;
-            document.getElementById('jackStuds').textContent = totalJackStuds;
-            document.getElementById('headerCount').textContent = totalHeaders;
-            document.getElementById('hurricaneTies').textContent = hurricaneTies;
-            document.getElementById('rafterHangers').textContent = rafterHangers;
-            document.getElementById('collarTies').textContent = collarTies;
-            document.getElementById('joistHangers').textContent = joistHangers;
-            document.getElementById('birdsmouthAngle').textContent = birdsmouthAngle.toFixed(2);
-            document.getElementById('fullRafterLength').textContent = (fullRafterLength).toFixed(2);
-            document.getElementById('totalCost').textContent = totalCost.toFixed(2);
+            // Update the cost table dynamically
+            document.getElementById('studQty').textContent = totalStuds;
+            document.getElementById('studCost').textContent = "$" + studCost.toFixed(2);
+            document.getElementById('rafterCost').textContent = "$" + rafterCost.toFixed(2);
+            document.getElementById('ridgeBeamCost').textContent = "$" + ridgeBeamCost.toFixed(2);
+            document.getElementById('totalCost').textContent = "$" + (studCost + rafterCost + ridgeBeamCost).toFixed(2);
         }
-
-        const inputs = document.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.addEventListener('input', calculateMaterials);
-        });
-
-        calculateMaterials();
 
         function drawCanvas() {
             const canvas = document.getElementById('framingCanvas');
@@ -316,6 +347,32 @@
             ctx.stroke();
         }
 
+        function resetTool() {
+            document.getElementById('length').value = "20-0";
+            document.getElementById('width').value = "16-0";
+            document.getElementById('height').value = "8-0";
+            document.getElementById('studSpacing').value = "16";
+            document.getElementById('roofPitch').value = "6";
+            document.getElementById('lumberSize').value = "2x4";
+            document.getElementById('rafterLumberSize').value = "2x6";
+            document.getElementById('ridgeBeamLumberSize').value = "2x6";
+            document.getElementById('eaveOverhang').value = "12";
+            document.getElementById('gableOverhang').value = "12";
+            document.getElementById('kingStudsPerOpening').value = "2";
+            document.getElementById('jackStudsPerOpening').value = "2";
+            document.getElementById('blockingOption').value = "No";
+            openings = [];
+            renderOpenings();
+            calculateMaterials();
+            drawCanvas();
+        }
+
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateMaterials);
+        });
+
+        calculateMaterials();
     </script>
 </body>
 </html>
